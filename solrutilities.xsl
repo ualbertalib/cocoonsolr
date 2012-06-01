@@ -50,7 +50,7 @@
    <xsl:variable name="solr_baseurl">
       <xsl:value-of select="$result-page"/>
       <xsl:text>?qq=</xsl:text>
-      <xsl:value-of select="url:encode($solr_q)"/>
+      <xsl:value-of select="url:encode($solr_q, 'UTF-8')"/>
    </xsl:variable>
    <!-- current query including sort and filters, for use in navigation links -->
    <!-- exclude application parameters from query since they will be re-added when the query is submitted -->
@@ -58,10 +58,10 @@
       <xsl:value-of select="$solr_baseurl"/>
       <xsl:for-each select="$solr_fq">
          <xsl:text>&amp;fq=</xsl:text>
-         <xsl:value-of select="url:encode(.)"/>
+         <xsl:value-of select="url:encode(., 'UTF-8')"/>
       </xsl:for-each>
       <xsl:text>&amp;sort=</xsl:text>
-      <xsl:value-of select="url:encode($solr_sort)"/>
+      <xsl:value-of select="url:encode($solr_sort, 'UTF-8')"/>
    </xsl:variable>
    <xsl:variable name="solr_rows" select="$solr_params/str[@name='rows']"/>
    <xsl:variable name="solr_numfound" select="$solr_response/result/@numFound"/>
@@ -114,9 +114,9 @@ Example of use - applied to arr/str:
       <xsl:param name="field"/>
       <xsl:param name="term"/>
       <xsl:text>?field=</xsl:text>
-      <xsl:value-of select="url:encode($field)"/>
+      <xsl:value-of select="url:encode($field, 'UTF-8')"/>
       <xsl:text>&amp;q=</xsl:text>
-      <xsl:value-of select="url:encode($term)"/>
+      <xsl:value-of select="url:encode($term, 'UTF-8')"/>
    </xsl:template>
    <!--
 ***************************************************************************
@@ -155,10 +155,10 @@ solr_narrower_filter: generates url that adds an fq filter to the current query,
       </xsl:if>
       <xsl:choose>
          <xsl:when test="$facetConfig/@quote='true'">
-            <xsl:value-of select="url:encode(concat('&quot;', $term, '&quot;'))"/>
+            <xsl:value-of select="url:encode(concat('&quot;', $term, '&quot;'), 'UTF-8')"/>
          </xsl:when>
          <xsl:otherwise>
-            <xsl:value-of select="url:encode($term)"/>
+            <xsl:value-of select="url:encode($term, 'UTF-8')"/>
          </xsl:otherwise>
       </xsl:choose>
       <!-- diagnostics: show current facetConfig at the end of the url 
@@ -194,11 +194,11 @@ Called by: solr_remove_filter
 			    ($filterfield != '' and not(starts-with(., concat($filterfield, ':'))))
 			    ">
             <xsl:text>&amp;fq=</xsl:text>
-            <xsl:value-of select="url:encode(.)"/>
+            <xsl:value-of select="url:encode(., 'UTF-8')"/>
          </xsl:if>
       </xsl:for-each>
       <xsl:text>&amp;sort=</xsl:text>
-      <xsl:value-of select="url:encode($solr_sort)"/>
+      <xsl:value-of select="url:encode($solr_sort, 'UTF-8')"/>
    </xsl:template>
    <!--
 ***************************************************************************
@@ -299,7 +299,7 @@ TODO: add "remove" links; merge this list with the list of fq filters
       <li>
          <xsl:value-of select="$operator"/>
          <xsl:text> </xsl:text>
-         <xsl:if test="$field != '*'">
+          <xsl:if test="$field != '*' and not($solr_query_config_fields[. = $field]/@default = 'true')">
             <xsl:value-of select="$solr_query_config_fields[. = $field]/@label"/>
             <xsl:text>: </xsl:text>
          </xsl:if>
@@ -1304,19 +1304,28 @@ context: /wrapper/response/lst[@name='facet_counts']/lst[@name='facet_fields']/l
          </xsl:variable>
          <xsl:variable name="nResults">
             <xsl:if test="$hitcount &gt; 0">
+                <!-- was ": 10 hits" -->
+                <xsl:text>&#160;(</xsl:text>
                <xsl:value-of select="$hitcount"/>
-               <xsl:text> hit</xsl:text>
-               <xsl:if test="$hitcount &gt; 1">s</xsl:if>
+               <xsl:text>)</xsl:text>
+               
             </xsl:if>
          </xsl:variable>
-         <xsl:choose>
+          <xsl:variable name="nResults-title">
+              <xsl:if test="$hitcount &gt; 0">
+                  <xsl:value-of select="$hitcount"/>
+                  <xsl:text> result</xsl:text>
+                  <xsl:if test="$hitcount &gt; 1">s</xsl:if>
+              </xsl:if>
+          </xsl:variable>
+          <xsl:choose>
             <xsl:when test="$style='tagcloud'">
                <xsl:variable name="percentage">
                   <xsl:value-of select="(. div $solr_numfound) * 100"/>
                </xsl:variable>
                <xsl:variable name="fontSize" select="ceiling($percentage div 10)"/>
                <!-- gives result as integer between 1 and 10 -->
-               <a title="{$nResults}" class="tagcloud{$fontSize}" href="{$queryurl}">
+               <a title="{$nResults-title}" class="tagcloud{$fontSize}" href="{$queryurl}">
                   <xsl:call-template name="solr_facet_query_label">
                      <xsl:with-param name="field" select="$field"/>
                      <xsl:with-param name="term" select="$termlabel"/>
@@ -1329,7 +1338,7 @@ context: /wrapper/response/lst[@name='facet_counts']/lst[@name='facet_fields']/l
             </xsl:when>
             <xsl:when test="$style='calendar'">
                <span class="hits" >
-                  <a title="{$nResults}" href="{$queryurl}" >
+                  <a title="{$nResults-title}" href="{$queryurl}" >
                      <xsl:value-of select="$termlabel"/>
                   </a>
                </span>
@@ -1343,7 +1352,7 @@ context: /wrapper/response/lst[@name='facet_counts']/lst[@name='facet_fields']/l
                   </xsl:attribute>
                   <xsl:choose>
                      <xsl:when test=". &gt; 0">
-                        <a title="{$nResults}" href="{$queryurl}">
+                        <a title="{$nResults-title}" href="{$queryurl}">
                            <xsl:call-template name="solr_facet_query_label">
                               <xsl:with-param name="field" select="$field"/>
                               <xsl:with-param name="term" select="$termlabel"/>
@@ -1360,7 +1369,6 @@ context: /wrapper/response/lst[@name='facet_counts']/lst[@name='facet_fields']/l
                         </xsl:call-template>
                      </xsl:otherwise>
                   </xsl:choose>
-                  <xsl:text>: </xsl:text>
                   <xsl:value-of select="$nResults"/>
                </li>
             </xsl:when>
