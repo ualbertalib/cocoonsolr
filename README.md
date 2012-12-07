@@ -6,7 +6,6 @@ Cocoon management of Solr queries and results
 #Usage:
 
 ##sitemap.xmap 
-* should be well known to Cocoon projects
 
 ```
 <map:generate type="request" label="request"/>
@@ -22,7 +21,7 @@ Cocoon management of Solr queries and results
 ```
 
 solr 
-* of the form http://[host]:[port]/[solr-webapp]/([core])
+* of the form [host]:[port]/[solr-webapp](/[core])
 
 ##solrqueries.xml  
 * defines default parameters of queries you define for your project
