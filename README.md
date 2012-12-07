@@ -22,7 +22,7 @@ Cocoon management of Solr queries and results
 ```
 
 ##solrqueries.xml  
-* defines default parameter for queries you define for your project
+* defines default parameters of queries you define for your project
 * this is a paired down example which demonstrates the basic elements of the file
 * this is input to the solrquery.xsl transform and typically lives in the base directory of your Cocoon project
 
