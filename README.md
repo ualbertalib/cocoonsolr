@@ -21,7 +21,7 @@ Cocoon management of Solr queries and results
 ```
 
 solr 
-* of the form [host]:[port]/[solr-webapp](/[core])
+* of the form `[host]:[port]/[solr-webapp](/[core])`
 
 ##solrqueries.xml  
 * defines default parameters of queries you define for your project
