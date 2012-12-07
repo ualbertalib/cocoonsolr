@@ -21,6 +21,9 @@ Cocoon management of Solr queries and results
 <!--- do what you want with the solr response and serialize -->
 ```
 
+solr 
+* of the form http://[host]:[port]/[solr-webapp]/([core])
+
 ##solrqueries.xml  
 * defines default parameters of queries you define for your project
 * this is a paired down example which demonstrates the basic elements of the file
